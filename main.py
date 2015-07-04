@@ -41,7 +41,7 @@ class Simulation:
             ]
             yield consultory.env.process(doctor.attend(client))
 
-            # Client exists
+            # Client exits
             client.done = True
 
         consultory = Consultory(
@@ -63,9 +63,10 @@ class Simulation:
 
 if __name__ == '__main__':
 
-    TIMEOUT = 2
+    TIMEOUT = 1000
+
     simulation = Simulation(
-        capacity=10000000000,
+        capacity=float('inf'),
         LAMBDA=10,
         ALPHA=10,
         BETA=12,
