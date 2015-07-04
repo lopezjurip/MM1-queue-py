@@ -1,4 +1,5 @@
-from logger import Log, Action
+from logger import Log, Action, Stat
+from collections import defaultdict
 import numpy
 import simpy
 
@@ -23,9 +24,18 @@ class Server(SimObject):
         super().__init__(env)
         self.rate = rate
         self.resource = simpy.Resource(env, capacity=capacity)
+        self.stats = defaultdict((lambda : Stat()))
 
     def log(self, client, action):
-        Log.d(time=self.env.now, user=client, action=action, target=self)
+        time = self.env.now
+        self.stats[client][action] = time
+        Log.d(time=time, user=client, action=action, target=self)
+
+    def waiting_times(self, start=Action.arrive, end=Action.exit):
+        return [stat[start:end] for stat in self.stats.values()]
+
+    def mean_waiting_times(self, start=Action.arrive, end=Action.exit):
+        return numpy.mean(self.waiting_times(start, end))
 
     def process(self, client):
         yield self.env.timeout(numpy.random.exponential(1 / self.rate))

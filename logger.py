@@ -1,4 +1,5 @@
 from enum import Enum
+from collections import defaultdict
 
 __author__ = "Patricio Lopez Juri"
 
@@ -31,3 +32,21 @@ class Log:
                 target
             )
             print(line)
+
+
+class Stat:
+
+    def __init__(self, client=None):
+        self.client = client
+        self.stats = defaultdict(lambda : 0)
+
+    def __getitem__(self, key):
+        if isinstance(key, Action):
+            return self.stats[key]
+        elif isinstance(key, slice):
+            start = self.stats[key.start]
+            end = self.stats[key.stop]
+            return end - start
+
+    def __setitem__(self, key, value):
+        self.stats[key] = value

@@ -7,7 +7,8 @@ __author__ = "Patricio Lopez Juri"
 
 class Simulation:
 
-    def __init__(self, capacity, LAMBDA, ALPHA, BETA, MU, GAMMA, p, q):
+    def __init__(self, env, capacity, LAMBDA, ALPHA, BETA, MU, GAMMA, p, q):
+        self.env = env
         self.capacity = capacity
         self.LAMBDA = LAMBDA  # Clients/hour
         self.ALPHA = ALPHA  # Clients/hour
@@ -16,8 +17,9 @@ class Simulation:
         self.GAMMA = GAMMA  # Clients/hour
         self.p = p  # Probability
         self.q = q  # Probability
+        self.consultory = self.setup(env)
 
-    def start(self, env):
+    def setup(self, env):
         p, q = self.p, self.q
 
         def operation(consultory, client):
@@ -44,7 +46,7 @@ class Simulation:
             # Client exits
             client.done = True
 
-        consultory = Consultory(
+        return Consultory(
             env=env,
             arrival_rate=self.LAMBDA,
             doctors=[Doctor(env, self.MU), Doctor(env, self.GAMMA)],
@@ -54,18 +56,24 @@ class Simulation:
             operation=operation
         )
 
-        # Start simulation
+    def start(self, env):
+        '''
+        Start simulation
+        '''
         while True:
             client = Client(env)
-            yield env.process(consultory.arrival(client))
-            env.process(consultory.attend(client))
+            yield env.process(self.consultory.arrival(client))
+            env.process(self.consultory.attend(client))
+
 
 
 if __name__ == '__main__':
 
-    TIMEOUT = 1000
+    env = simpy.Environment()
 
+    TIMEOUT = 10
     simulation = Simulation(
+        env=env,
         capacity=float('inf'),
         LAMBDA=10,
         ALPHA=10,
@@ -76,6 +84,6 @@ if __name__ == '__main__':
         q=0.3
     )
 
-    env = simpy.Environment()
     env.process(simulation.start(env))
     env.run(until=TIMEOUT)
+    print("End of simulation.")
